@@ -52,15 +52,20 @@ def open_file():
 
 
 def build_canvas(img):
+    # on resize l'image
+    ratio = img.shape[1]/img.shape[0]
+    height = 700
+    width = int(ratio*height)
+    frame = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
     canvas = img
     if user_choices.faces.get() == '1':
         canvas = detect_faces(img)
     elif user_choices.shapes.get() == '1':
-        pass
+        canvas = detect_shapes(img)
     elif user_choices.texts.get() == '1':
-        pass
+        canvas = detect_text(img)
     elif user_choices.colors.get() == '1':
-        pass
+        canvas = detect_colors(img)
     return canvas
 
 
