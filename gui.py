@@ -55,11 +55,11 @@ def build_canvas(img):
     canvas = img
     if user_choices.faces.get() == '1':
         canvas = detect_faces(img)
-    elif user_choices.shapes.get() == '1':
+    if user_choices.shapes.get() == '1':
         canvas = detect_shapes(img)
-    elif user_choices.texts.get() == '1':
+    if user_choices.texts.get() == '1':
         canvas = detect_text(img)
-    elif user_choices.colors.get() == '1':
+    if user_choices.colors.get() == '1':
         canvas = detect_colors(img)
     return canvas
 
@@ -76,7 +76,7 @@ def launch_detection():
 
             # Nouvelle fenetre 'Video' qui affiche le résultat
             cv2.putText(canvas, 'Appuyez sur Q pour fermer le programme', (10, 35),
-                        font, 0.9, green, 2)
+                        font, 0.9, (0, 0, 255), 2)
             cv2.imshow('Video', canvas)
 
             # Si l'utilisateur appuies sur la touche q, le programme s'arrête
@@ -93,6 +93,8 @@ def launch_detection():
             canvas = build_canvas(img)
 
             # Nouvelle fenetre 'Image' qui affiche le résultat
+            cv2.putText(canvas, 'Appuyez sur une touche pour fermer le programme', (10, 35),
+                        font, 1.4, (0, 0, 255), 2)
             cv2.imshow('Image', canvas)
 
             # Si l'utilisateur appuies sur une touche, le programme s'arrête
@@ -106,6 +108,12 @@ def set_webcam():
     menu1.forget()
     menu2.pack(expand=YES)
     menu3.pack(expand=YES)
+
+
+def create_button(menu, text, variable):
+    Checkbutton(menu, text=text, background=bgColor, foreground=color4,
+                font=("Courrier", 20), pady=10, variable=variable, onvalue=1, offvalue=0).pack(anchor='w')
+    pass
 
 
 def main():
@@ -124,47 +132,38 @@ def main():
     style.configure('A.TCheckbutton', background=bgColor, foreground=color4, font=("Courrier", 20), pady=10)
     style.map('A.TCheckbutton', background=[('active', bgColor)])
 
-    # ajouter un premier texte
+    # Titre + espace
     Label(menu1, text="Reconnaissance d'éléments", font=("Courrier", 40), bg=bgColor, fg="white").pack()
-
     space(frame=menu1)
 
+    # Texte + espace
     Label(menu1, text="Quelle source voulez vous utiliser ?", font=("Courrier", 30), bg=bgColor, fg="white").pack()
-
     space(frame=menu1)
 
-    # ajouter un bouton
-
+    # Bouton webcam
     webcam_button = ttk.Button(menu1, text="Webcam", style='A.TButton', command=set_webcam)
     webcam_button.pack(side=LEFT, expand=YES)
 
+    # Bouton choix de fichier
     file_button = ttk.Button(menu1, text="Fichier vidéo / image", style='A.TButton', command=open_file)
     file_button.pack(side=LEFT, expand=YES)
 
+    # Titre + espace
     Label(menu2, text="Reconnaissance d'élements", font=("Courrier", 40), bg=bgColor, fg="white").pack()
-
     space(frame=menu2)
 
+    # Texte + espace
     Label(menu2, text="Que voulez-vous détecter ?", font=("Courrier", 30), bg=bgColor, fg="white").pack()
-
     space(frame=menu2)
 
-    Checkbutton(menu3, text="Reconnaissance Faciale", background=bgColor, foreground=color4,
-                font=("Courrier", 20), pady=10, variable=user_choices.faces, onvalue=1, offvalue=0).pack(anchor='w')
-
-    Checkbutton(menu3, text="Couleurs", background=bgColor, foreground=color4,
-                font=("Courrier", 20), pady=10, variable=user_choices.colors, onvalue=1, offvalue=0).pack(anchor='w')
-
-    Checkbutton(menu3, text="Texte", background=bgColor, foreground=color4, font=("Courrier", 20),
-                pady=10,
-                variable=user_choices.texts, onvalue=1, offvalue='0').pack(anchor='w')
-
-    Checkbutton(menu3, text="Formes", background=bgColor, foreground=color4, font=("Courrier", 20),
-                pady=10,
-                variable=user_choices.shapes, onvalue=1, offvalue='0').pack(anchor='w')
-
+    # Boutons de choix + espace
+    create_button(menu3, "Reconnaissance Faciale", user_choices.faces)
+    create_button(menu3, "Couleurs", user_choices.colors)
+    create_button(menu3, "Texte", user_choices.texts)
+    create_button(menu3, "Formes", user_choices.shapes)
     space(frame=menu3)
 
+    # Bouton pour lancer la détection
     ttk.Button(menu3, text="Go !", style='A.TButton', command=launch_detection).pack(expand=YES)
 
     menu1.pack(expand=YES)
