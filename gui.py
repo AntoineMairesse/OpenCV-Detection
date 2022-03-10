@@ -52,11 +52,6 @@ def open_file():
 
 
 def build_canvas(img):
-    # on resize l'image
-    ratio = img.shape[1]/img.shape[0]
-    height = 700
-    width = int(ratio*height)
-    frame = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
     canvas = img
     if user_choices.faces.get() == '1':
         canvas = detect_faces(img)
@@ -80,6 +75,8 @@ def launch_detection():
             canvas = build_canvas(frame)
 
             # Nouvelle fenetre 'Video' qui affiche le résultat
+            cv2.putText(canvas, 'Appuyez sur Q pour fermer le programme', (10, 35),
+                        font, 0.9, green, 2)
             cv2.imshow('Video', canvas)
 
             # Si l'utilisateur appuies sur la touche q, le programme s'arrête
