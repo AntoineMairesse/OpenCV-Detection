@@ -70,10 +70,13 @@ def detect_colors(frame):
 
 
 def detect_text(frame):
-
+    # on resize l'image
+    ratio = frame.shape[0] / frame.shape[1]
+    width = 1000
+    height = int(ratio * width)
+    frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
     # on récupère les data de l'image
     d = pytesseract.image_to_data(frame)
-
     # on découpe la data dans une liste puis on itère dessus
     for count, data in enumerate(d.splitlines()):
 

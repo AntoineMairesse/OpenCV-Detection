@@ -1,7 +1,11 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+
+import cv2
+
 from detection import *
+import platform
 
 bgColor = "#222831"
 color2 = "#393E46"
@@ -43,9 +47,11 @@ def space(frame):
 def open_file():
     filename = filedialog.askopenfilename(initialdir="/", title="Selectionnez un fichier",
                                           filetypes=[("image png", "*.png"), ("image jpg", "*.jpg"),
-                                                     ("image jpeg", "*.jpeg")])
+                                                     ("image jpeg", "*.jpeg"), ("video mp4", "*.mp4")])
     user_choices.filename = filename
-    if filename is not None:
+
+    # si un fichier est sélectionné alors on change les menus
+    if filename != "":
         menu1.forget()
         menu2.pack(expand=YES)
         menu3.pack(expand=YES)
@@ -89,18 +95,60 @@ def launch_detection():
     else:
         # Si l'utilisateur a bien choisi un fichier
         if user_choices.filename is not None:
-            img = cv2.imread(user_choices.filename)
-            canvas = build_canvas(img)
 
-            # Nouvelle fenetre 'Image' qui affiche le résultat
-            cv2.putText(canvas, 'Appuyez sur une touche pour fermer le programme', (10, 35),
-                        font, 1.4, (0, 0, 255), 2)
-            cv2.imshow('Image', canvas)
+            # On récupère l'extension du fichier
+            length = len(user_choices.filename)
+            extension = user_choices.filename[length - 4:length]
 
-            # Si l'utilisateur appuies sur une touche, le programme s'arrête
-            cv2.waitKey(0)
-            # On détruit les fenêtres.
-            cv2.destroyAllWindows()
+            # Si le fichier est une vidéo
+            if extension == ".mp4":
+
+                video = cv2.VideoCapture(user_choices.filename)
+                frame_counter = 0.0
+
+                while video.isOpened():
+
+                    # On loop sur la vidéo
+                    if frame_counter == video.get(cv2.CAP_PROP_FRAME_COUNT):
+                        frame_counter = 0
+                        video.set(cv2.CAP_PROP_FRAME_COUNT, 0)
+                        video.release()
+                        video = cv2.VideoCapture(user_choices.filename)
+
+                    # On prend la frame de la vidéo puis on build le canvas à partir de celle-ci
+                    _, frame = video.read()
+                    frame_counter += 1
+                    canvas = build_canvas(frame)
+
+                    # Nouvelle fenetre 'Video' qui affiche le résultat
+                    cv2.putText(canvas, 'Appuyez sur Q pour fermer le programme', (10, 35),
+                                font, 0.9, (0, 0, 255), 2)
+                    cv2.imshow('Video', canvas)
+
+                    # Si l'utilisateur appuies sur la touche q, le programme s'arrête
+                    if cv2.waitKey(1) & 0xff == ord('q'):
+                        return
+
+                    # On ferme la capture vidéo et on détruit les fenêtres.
+                video.release()
+                cv2.destroyAllWindows()
+
+            # Si le fichier est une image
+            else:
+
+                # On build le canvas à partir de l'image
+                img = cv2.imread(user_choices.filename)
+                canvas = build_canvas(img)
+
+                # Nouvelle fenetre 'Image' qui affiche le résultat
+                cv2.putText(canvas, 'Appuyez sur une touche pour fermer le programme', (10, 35),
+                            font, 1.4, (0, 0, 255), 2)
+                cv2.imshow('Image', canvas)
+
+                # Si l'utilisateur appuies sur une touche, le programme s'arrête
+                cv2.waitKey(0)
+                # On détruit les fenêtres.
+                cv2.destroyAllWindows()
 
 
 def set_webcam():
@@ -111,8 +159,12 @@ def set_webcam():
 
 
 def create_button(menu, text, variable):
-    Checkbutton(menu, text=text, background=bgColor, foreground=color4,
-                font=("Courrier", 20), pady=10, variable=variable, onvalue=1, offvalue=0).pack(anchor='w')
+    if platform.system() == 'Darwin':
+        Checkbutton(menu, text=text, background=bgColor, foreground=color4,
+                    font=("Courrier", 20), pady=10, variable=variable, onvalue=1, offvalue=0).pack(anchor='w')
+    elif platform.system() == 'Windows':
+        ttk.Checkbutton(menu, text=text, onvalue=1, offvalue=0, variable=variable, style='A.TCheckbutton').pack(
+            anchor='w')
     pass
 
 
@@ -167,6 +219,5 @@ def main():
     ttk.Button(menu3, text="Go !", style='A.TButton', command=launch_detection).pack(expand=YES)
 
     menu1.pack(expand=YES)
-
     # afficher la fenetre
     window.mainloop()
