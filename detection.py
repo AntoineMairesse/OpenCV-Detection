@@ -1,6 +1,7 @@
 import cv2
 import pytesseract
 import numpy as np
+import imutils
 
 face_cascade = cv2.CascadeClassifier('resources/haarcascade_frontalface_default.xml')
 # couleur du rectangle & texte
@@ -59,13 +60,84 @@ def detect_shapes(frame):
 
             # On donne un nom au polygone ou alors son nombre de points
             if 2 < len(approx) < 13:
-                cv2.putText(frame, polygones[len(approx)-3], (x, y-20), font, 1.4, green, 2)
+                cv2.putText(frame, polygones[len(approx) - 3], (x, y - 20), font, 1.4, green, 2)
             else:
-                cv2.putText(frame, "Points : " + str(len(approx)), (x, y-20), font, 1.4, green, 2)
+                cv2.putText(frame, "Points : " + str(len(approx)), (x, y - 20), font, 1.4, green, 2)
     return frame
 
 
 def detect_colors(frame):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    lower_red = np.array([0, 50, 120])
+    upper_red = np.array([10, 255, 255])
+    lower_yellow = np.array([25, 70, 120])
+    upper_yellow = np.array([30, 255, 255])
+    lower_green = np.array([40, 70, 80])
+    upper_green = np.array([70, 255, 255])
+    lower_blue = np.array([90, 60, 0])
+    upper_blue = np.array([121, 255, 255])
+    mask1 = cv2.inRange(hsv, lower_yellow, upper_yellow)
+    mask2 = cv2.inRange(hsv, lower_green, upper_green)
+    mask3 = cv2.inRange(hsv, lower_red, upper_red)
+    mask4 = cv2.inRange(hsv, lower_blue, upper_blue)
+    cnts1 = cv2.findContours(mask1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts1 = imutils.grab_contours(cnts1)
+    cnts2 = cv2.findContours(mask2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts2 = imutils.grab_contours(cnts2)
+    cnts3 = cv2.findContours(mask3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts3 = imutils.grab_contours(cnts3)
+    cnts4 = cv2.findContours(mask4, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts4 = imutils.grab_contours(cnts4)
+    for c in cnts1:
+        area1 = cv2.contourArea(c)
+        if area1 > 5000:
+            cv2.drawContours(frame, [c], -1, (0, 255, 0), 3)
+
+            M = cv2.moments(c)
+
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+
+            cv2.circle(frame, (cx, cy), 7, (255, 255, 255), -1)
+            cv2.putText(frame, "YELLOW", (cx - 20, cy - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (255, 255, 255), 3)
+
+    for c in cnts2:
+        area2 = cv2.contourArea(c)
+        if area2 > 5000:
+            cv2.drawContours(frame, [c], -1, (0, 255, 0), 3)
+
+            M = cv2.moments(c)
+
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+
+            cv2.circle(frame, (cx, cy), 7, (255, 255, 255), -1)
+            cv2.putText(frame, "GREEN", (cx - 20, cy - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (255, 255, 255), 3)
+    for c in cnts3:
+        area3 = cv2.contourArea(c)
+        if area3 > 5000:
+            cv2.drawContours(frame, [c], -1, (0, 255, 0), 3)
+
+            M = cv2.moments(c)
+
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+
+            cv2.circle(frame, (cx, cy), 7, (255, 255, 255), -1)
+            cv2.putText(frame, "Red", (cx - 20, cy - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (255, 255, 255), 3)
+    for c in cnts4:
+        area4 = cv2.contourArea(c)
+        if area4 > 5000:
+            cv2.drawContours(frame, [c], -1, (0, 255, 0), 3)
+
+            M = cv2.moments(c)
+
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+
+            cv2.circle(frame, (cx, cy), 7, (255, 255, 255), -1)
+            cv2.putText(frame, "BLUE", (cx - 20, cy - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (255, 255, 255), 3)
+
     return frame
 
 
@@ -86,7 +158,6 @@ def detect_text(frame):
 
             # si data contient un mot
             if len(data) == 12:
-
                 # on récupère les coordonnées du rectangle qui entoure le mot puis on affiche celui-ci avec le mot.
                 x, y, w, h = int(data[6]), int(data[7]), int(data[8]), int(data[9])
                 cv2.rectangle(frame, (x, y), (w + x, h + y), green, 3)

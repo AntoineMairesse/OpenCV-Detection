@@ -81,6 +81,7 @@ def launch_detection():
             canvas = build_canvas(frame)
 
             # Nouvelle fenetre 'Video' qui affiche le résultat
+            print(frame.shape[0], frame.shape[1])
             cv2.putText(canvas, 'Appuyez sur Q pour fermer le programme', (10, 35),
                         font, 0.9, (0, 0, 255), 2)
             cv2.imshow('Video', canvas)
@@ -120,9 +121,11 @@ def launch_detection():
                     frame_counter += 1
                     canvas = build_canvas(frame)
 
+                    ratio = frame.shape[1] / frame.shape[0]
+
                     # Nouvelle fenetre 'Video' qui affiche le résultat
                     cv2.putText(canvas, 'Appuyez sur Q pour fermer le programme', (10, 35),
-                                font, 0.9, (0, 0, 255), 2)
+                                font, 0.4*ratio, (0, 0, 255), 2)
                     cv2.imshow('Video', canvas)
 
                     # Si l'utilisateur appuies sur la touche q, le programme s'arrête
