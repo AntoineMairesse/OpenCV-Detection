@@ -67,13 +67,14 @@ def detect_shapes(frame):
 
 
 def detect_colors(frame):
-    class Contour():  # leave this empty
-        def __init__(self, c, color):  # constructor function using self
-            self.Contour = c  # variable using self.
-            self.Color = color  # variable using self
+    class Contour:
+        def __init__(self, cont, color):
+            self.Contour = cont
+            self.Color = color
 
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
+    # Tableau des intervalles des couleurs
     yellow = [np.array([25, 70, 120]), np.array([30, 255, 255])]
     greeen = [np.array([40, 70, 80]), np.array([70, 255, 255])]
     red = [np.array([0, 50, 120]), np.array([10, 255, 255])]
@@ -100,10 +101,10 @@ def detect_colors(frame):
             if area > 5000:
                 cv2.drawContours(frame, [c], -1, (0, 255, 0), 3)
 
-                M = cv2.moments(c)
-
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
+                # trouve le centre de la forme
+                moment = cv2.moments(c)
+                cx = int(moment["m10"] / moment["m00"])
+                cy = int(moment["m01"] / moment["m00"])
 
                 cv2.circle(frame, (cx, cy), 7, (255, 255, 255), -1)
                 cv2.putText(frame, contour.Color, (cx - 20, cy - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.5, green, 3)
@@ -111,11 +112,6 @@ def detect_colors(frame):
 
 
 def detect_text(frame):
-    # on resize l'image
-    ratio = frame.shape[0] / frame.shape[1]
-    width = 1000
-    height = int(ratio * width)
-    frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
     # on récupère les data de l'image
     d = pytesseract.image_to_data(frame)
     # on découpe la data dans une liste puis on itère dessus

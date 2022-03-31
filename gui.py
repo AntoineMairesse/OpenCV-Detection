@@ -2,16 +2,14 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 
-import cv2
-
 from detection import *
-import platform
 
 bgColor = "#222831"
 color2 = "#393E46"
 color3 = "#00ADB5"
 color4 = "#EEEEEE"
 window = Tk()
+destroyed = False
 
 
 class UserData(object):
@@ -45,9 +43,11 @@ def space(frame):
 
 
 def open_file():
-    filename = filedialog.askopenfilename(initialdir="/", title="Selectionnez un fichier",
-                                          filetypes=[("image png", "*.png"), ("image jpg", "*.jpg"),
-                                                     ("image jpeg", "*.jpeg"), ("video mp4", "*.mp4")])
+    filename = filedialog.askopenfilename(
+        initialdir="/",
+        title="Selectionnez un fichier",
+        filetypes=[("Selectionnez une image ou une vidéo", ["*.png", "*.jpg", "*.jpeg", "*.mp4"])]
+    )
     user_choices.filename = filename
 
     # si un fichier est sélectionné alors on change les menus
@@ -71,19 +71,19 @@ def build_canvas(img):
 
 
 def launch_detection():
-    window.destroy()
     # Si l'utilisateur a choisi la webcam
     if user_choices.webcam == 1:
         video_capture = cv2.VideoCapture(0)
         while video_capture.isOpened():
             # Capture la video image par image
             _, frame = video_capture.read()
+            frame = resize_frame(frame)
             canvas = build_canvas(frame)
 
             # Nouvelle fenetre 'Video' qui affiche le résultat
-            print(frame.shape[0], frame.shape[1])
             cv2.putText(canvas, 'Appuyez sur Q pour fermer le programme', (10, 35),
                         font, 0.9, (0, 0, 255), 2)
+            destroy_main_window()
             cv2.imshow('Video', canvas)
 
             # Si l'utilisateur appuies sur la touche q, le programme s'arrête
@@ -118,6 +118,7 @@ def launch_detection():
 
                     # On prend la frame de la vidéo puis on build le canvas à partir de celle-ci
                     _, frame = video.read()
+                    frame = resize_frame(frame)
                     frame_counter += 1
                     canvas = build_canvas(frame)
 
@@ -125,7 +126,8 @@ def launch_detection():
 
                     # Nouvelle fenetre 'Video' qui affiche le résultat
                     cv2.putText(canvas, 'Appuyez sur Q pour fermer le programme', (10, 35),
-                                font, 0.4*ratio, (0, 0, 255), 2)
+                                font, 0.4 * ratio, (0, 0, 255), 2)
+                    destroy_main_window()
                     cv2.imshow('Video', canvas)
 
                     # Si l'utilisateur appuies sur la touche q, le programme s'arrête
@@ -141,11 +143,13 @@ def launch_detection():
 
                 # On build le canvas à partir de l'image
                 img = cv2.imread(user_choices.filename)
+                img = resize_frame(img)
                 canvas = build_canvas(img)
 
                 # Nouvelle fenetre 'Image' qui affiche le résultat
                 cv2.putText(canvas, 'Appuyez sur une touche pour fermer le programme', (10, 35),
                             font, 1.4, (0, 0, 255), 2)
+                destroy_main_window()
                 cv2.imshow('Image', canvas)
 
                 # Si l'utilisateur appuies sur une touche, le programme s'arrête
@@ -162,13 +166,27 @@ def set_webcam():
 
 
 def create_button(menu, text, variable):
-    if platform.system() == 'Darwin':
-        Checkbutton(menu, text=text, background=bgColor, foreground=color4,
-                    font=("Courrier", 20), pady=10, variable=variable, onvalue=1, offvalue=0).pack(anchor='w')
-    elif platform.system() == 'Windows':
-        ttk.Checkbutton(menu, text=text, onvalue=1, offvalue=0, variable=variable, style='A.TCheckbutton').pack(
-            anchor='w')
+    Checkbutton(menu, text=text, background=bgColor, font=("Courrier", 20), pady=10, variable=variable, onvalue=1,
+                offvalue=0).pack(anchor='w')
     pass
+
+
+def destroy_main_window():
+    global destroyed
+    if not destroyed:
+        window.destroy()
+        destroyed = True
+
+
+# resize l'image pour que le plus grand côté (hauteur ou largeur) fasse 1000px
+def resize_frame(frame):
+    if frame.shape[0] > frame.shape[1]:
+        ratio = int((frame.shape[0] / frame.shape[1]))
+        frame = cv2.resize(frame, (int((1000 / ratio)), 1000), interpolation=cv2.INTER_AREA)
+    else:
+        ratio = int((frame.shape[1] / frame.shape[0]))
+        frame = cv2.resize(frame, (1000, (int((1000 / ratio)))), interpolation=cv2.INTER_AREA)
+    return frame
 
 
 def main():
@@ -184,8 +202,6 @@ def main():
     style.theme_use('alt')
     style.configure('A.TButton', font=('Courrier', 20), background=color2, foreground='white', padding=15)
     style.map('A.TButton', background=[('active', bgColor)])
-    style.configure('A.TCheckbutton', background=bgColor, foreground=color4, font=("Courrier", 20), pady=10)
-    style.map('A.TCheckbutton', background=[('active', bgColor)])
 
     # Titre + espace
     Label(menu1, text="Reconnaissance d'éléments", font=("Courrier", 40), bg=bgColor, fg="white").pack()
